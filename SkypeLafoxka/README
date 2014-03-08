@@ -1,0 +1,3 @@
+Lafoxka is a hungarian chat robot.
+This application connects to the Skype that running on Linux
+and forwards every message you receive to Lafoxka and sends back its reply.
