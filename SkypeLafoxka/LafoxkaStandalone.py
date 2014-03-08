@@ -41,9 +41,7 @@ class Lafoxka(object):
         msgs.reverse()
         return msgs
 
-#HOST = "localhost"
-#PORT = 4444
-
+# Creating instance of Lafoxka object
 lafoxka = Lafoxka()
 
 # Creating instance of Skype object
