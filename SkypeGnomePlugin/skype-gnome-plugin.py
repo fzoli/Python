@@ -6,15 +6,17 @@ import dbus
 import dbus.glib
 import gobject
 from threading import Thread
+from time import sleep
 
 class SkypeGnomePlugin:
 
   def __init__(self):
+    self.refused = False
+#    self.restoreStatus = False
     self.__init_global_error_handler()
     self.__init_dbus()
     self.__init_skype()
     self.__start_main_loop()
-#    self.restoreStatus = False
   
   def __dbus_screensaver_handler(self, p):
     if p == 1:
@@ -67,12 +69,20 @@ class SkypeGnomePlugin:
       sys.exit(1)
     self.skype.FriendlyName = 'GnomePlugin'
     self.skype.OnAttachmentStatus = self.__skype_attachment_handler;
+    self.__try_skype_attach()
+    
+  def __try_skype_attach(self):
     try:
       self.skype.Attach()
     except Skype4Py.errors.SkypeAPIError:
-      print >>sys.stderr, 'Skype plugin access denyed.'
-      sys.exit(1)
-  
+      if self.refused:
+        print >>sys.stderr, 'Skype plugin access denyed.'
+        sys.exit(1)
+      else:
+        self.refused = True
+        sleep(3)
+        self.__try_skype_attach()
+
   def __on_error(self, exctype, value, traceback):
     print 'Unexpected error.'
     self.__stop_main_loop()
@@ -86,8 +96,8 @@ class SkypeGnomePlugin:
 
   def __stop_main_loop(self):
     print 'Bye'
-    self.loop.quit()
+    if hasattr(self, 'loop'):
+      self.loop.quit()
   
 if __name__ == '__main__':
   SkypeGnomePlugin()
-  
