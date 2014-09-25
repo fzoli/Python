@@ -2,6 +2,7 @@
 
 import sys
 try:
+  import exceptions
   import Skype4Py
   import dbus
   import dbus.glib
@@ -58,6 +59,7 @@ class SkypeGnomePlugin:
   
   def __on_skype_attached(self):
     print 'Skype plugin has attached.'
+    self.skypeAttached = True
   
   def __on_skype_closed(self):
     print 'Skype has been closed.'
@@ -81,8 +83,8 @@ class SkypeGnomePlugin:
     
   def __try_skype_attach(self):
     try:
-      self.skype.Attach() # TODO: bug - attach wont throw exception when called second time if user always rejects
-      self.skypeAttached = True
+      self.skype.Attach()
+      # TODO: attach doesn't throw exception on the second API reject, app will close only when skype will be closed
     except Skype4Py.errors.SkypeAPIError:
       if self.refused:
         print >>sys.stderr, 'Skype plugin access denyed.'
@@ -93,10 +95,11 @@ class SkypeGnomePlugin:
         self.__try_skype_attach()
 
   def __on_error(self, exctype, value, traceback):
-    print >>sys.stderr, 'Unexpected error.'
     self.__stop_main_loop()
-    sys.__excepthook__(exctype, value, traceback)
-    sys.exit(3)
+    if exctype != exceptions.KeyboardInterrupt:
+      print >>sys.stderr, 'Unexpected error.'
+      sys.__excepthook__(exctype, value, traceback)
+      sys.exit(3)
 
   def __start_main_loop(self):
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
