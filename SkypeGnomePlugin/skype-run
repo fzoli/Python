@@ -1,0 +1,25 @@
+#!/bin/bash
+
+procCount() {
+  ps -U $USER -o fname | egrep "^$1$" | wc -l
+}
+
+skypeCount() {
+  procCount skype
+}
+
+SKYPE_COUNT=`skypeCount`
+if [ $SKYPE_COUNT -eq 0 ] ; then
+  skype &
+  sleep 0.5
+fi
+
+SKYPE_COUNT=`skypeCount`
+while [ $SKYPE_COUNT -ge 1 ] ; do
+  /home/zoli/NetBeansProjects/Python/SkypeGnomePlugin/skype-gnome-plugin.py
+  echo 'Skype plugin finished'
+  sleep 0.5
+  SKYPE_COUNT=`skypeCount`
+done
+
+echo 'Done'
