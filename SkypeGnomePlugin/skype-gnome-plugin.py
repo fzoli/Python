@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 
 import sys
-import Skype4Py
-import dbus
-import dbus.glib
-import gobject
-from threading import Thread
-from time import sleep
+try:
+  import Skype4Py
+  import dbus
+  import dbus.glib
+  import gobject
+  from threading import Thread
+  from time import sleep
+except:
+  print >>sys.stderr, 'Missing modules.'
+  sys.exit(4)
 
 class SkypeGnomePlugin:
 
   def __init__(self):
+    self.skypeAttached = False
     self.refused = False
-#    self.restoreStatus = False
     self.__init_global_error_handler()
     self.__init_dbus()
     self.__init_skype()
@@ -31,21 +35,25 @@ class SkypeGnomePlugin:
       if status != Skype4Py.apiAttachRefused:
         self.__on_skype_closed()
   
+  def __is_skype_status(self, status):
+    if self.skypeAttached:
+      return self.skype.CurrentUserStatus == status
+    else:
+      return False
+
   def __set_skype_status(self, status):
-    Thread(target = self.skype.ChangeUserStatus, args = (status, )).start()
-    print 'Set to ' + status + '.'
+    if self.skypeAttached:
+      Thread(target = self.skype.ChangeUserStatus, args = (status, )).start()
+      print 'Set to ' + status + '.'
 
   def __on_screen_locked(self):
     print 'Screen has locked.'
-    if self.skype.CurrentUserStatus == 'ONLINE':
-#      self.restoreStatus = True
+    if self.__is_skype_status('ONLINE'):
       self.__set_skype_status('AWAY')
   
   def __on_screen_unlocked(self):
     print 'Screen has been unlocked.'
-#    if self.restoreStatus:
-#      self.restoreStatus = False
-    if self.skype.CurrentUserStatus == 'AWAY':
+    if self.__is_skype_status('AWAY'):
       self.__set_skype_status('ONLINE')
   
   def __on_skype_attached(self):
@@ -73,21 +81,22 @@ class SkypeGnomePlugin:
     
   def __try_skype_attach(self):
     try:
-      self.skype.Attach()
+      self.skype.Attach() # TODO: bug - attach wont throw exception when called second time if user always rejects
+      self.skypeAttached = True
     except Skype4Py.errors.SkypeAPIError:
       if self.refused:
         print >>sys.stderr, 'Skype plugin access denyed.'
-        sys.exit(1)
+        sys.exit(2)
       else:
         self.refused = True
         sleep(3)
         self.__try_skype_attach()
 
   def __on_error(self, exctype, value, traceback):
-    print 'Unexpected error.'
+    print >>sys.stderr, 'Unexpected error.'
     self.__stop_main_loop()
     sys.__excepthook__(exctype, value, traceback)
-    sys.exit(1)
+    sys.exit(3)
 
   def __start_main_loop(self):
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
