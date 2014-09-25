@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PLUGIN_PATH='/home/zoli/NetBeansProjects/Python/SkypeGnomePlugin/skype-gnome-plugin.py'
+PLUGIN_PATH='./skype-gnome-plugin.py'
 
 procCount() {
   ps -U $USER -o fname | egrep "^$1$" | wc -l
@@ -12,12 +12,14 @@ skypeCount() {
 
 SKYPE_COUNT=`skypeCount`
 if [ $SKYPE_COUNT -eq 0 ] ; then
+  echo 'Start skype'
   skype &
   sleep 0.5
 fi
 
 SKYPE_COUNT=`skypeCount`
 while [ $SKYPE_COUNT -ge 1 ] ; do
+  echo 'Start plugin'
   eval $PLUGIN_PATH
   echo 'Skype plugin finished'
   sleep 0.5
