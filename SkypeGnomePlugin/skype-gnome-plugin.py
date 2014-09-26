@@ -15,6 +15,8 @@ except:
 
 class SkypeGnomePlugin:
 
+  printEnabled = True
+
   def __init__(self):
     self.statusMatch = False
     self.skypeAttached = False
@@ -51,31 +53,31 @@ class SkypeGnomePlugin:
       if self.__is_skype_status(statFrom):
         self.statusMatch = True
         self.skype.ChangeUserStatus(statTo)
-        print 'Set status from ' + statFrom + ' to ' + statTo + '.'
+        self.__log('Set status from ' + statFrom + ' to ' + statTo + '.')
       else:
         self.statusMatch = False
-        print 'Do not touch status; status is not ' + statFrom + '.'
+        self.__log('Do not touch status; status is not ' + statFrom + '.')
   
-  def switch_skype_status(self, statFrom, statTo):
+  def __try_switch_skype_status(self, statFrom, statTo):
     Thread(target = self.__switch_skype_status, args = (statFrom, statTo)).start()
   
   def __on_screen_locked(self):
-    print 'Screen has locked.'
-    self.switch_skype_status('ONLINE', 'AWAY')
+    self.__log('Screen has locked.')
+    self.__try_switch_skype_status('ONLINE', 'AWAY')
       
   def __on_screen_unlocked(self):
-    print 'Screen has been unlocked.'
+    self.__log('Screen has been unlocked.')
     if self.statusMatch:
-      self.switch_skype_status('AWAY', 'ONLINE')
+      self.__try_switch_skype_status('AWAY', 'ONLINE')
     else:
-      print 'Do not touch status; status was not changed on screen lock.'
+      self.__log('Do not touch status; status was not changed on screen lock.')
     
   def __on_skype_attached(self):
-    print 'Skype plugin has attached.'
+    self.__log('Skype plugin has attached.')
     self.skypeAttached = True
   
   def __on_skype_closed(self):
-    print 'Skype has been closed.'
+    self.__log('Skype has been closed.')
     self.__stop_main_loop()
   
   def __init_global_error_handler(self):
@@ -120,9 +122,14 @@ class SkypeGnomePlugin:
     self.loop.run()
 
   def __stop_main_loop(self):
-    print 'Bye'
+    self.__log('Bye.')
     if hasattr(self, 'loop'):
       self.loop.quit()
   
+  def __log(self, text):
+    if SkypeGnomePlugin.printEnabled:
+      print text
+
+
 if __name__ == '__main__':
   SkypeGnomePlugin()
