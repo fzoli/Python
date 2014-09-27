@@ -80,15 +80,18 @@ tryReAttach = True
 
 def try_attach():
   global skype, tryReAttach
-  try:
-    log('Try attach.')
-    skype.Attach()
-  except:
-    log('Attach failed.')
-    if tryReAttach:
-      tryReAttach = False
-      sleep(3)
-      try_attach()
+  if skype.Client.IsRunning:
+    try:
+      log('Try attach.')
+      skype.Attach()
+    except:
+      log('Attach failed.')
+      if tryReAttach:
+        tryReAttach = False
+        sleep(3)
+        try_attach()
+  else:
+    log('Skype is not running.')
 
 try_attach()
 
