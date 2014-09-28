@@ -37,11 +37,11 @@ def safe_switch_skype_status(statFrom, statTo):
       if forceAttach:
         log('Try attach.')
         skype.Attach()
+        forceAttach = False
       # Note: CurrentUserStatus and ChangeUserStatus call synchron attach if need; may throw exception
       if skype.CurrentUserStatus == statFrom:
         skype.ChangeUserStatus(statTo)
         statusMatch = True
-        forceAttach = False
         log('Set status from ' + statFrom + ' to ' + statTo + '.')
       else:
         statusMatch = False
@@ -105,11 +105,9 @@ def log(text):
   if logging:
     print text
 
-sys.excepthook = on_error
-
 bus = dbus.SessionBus()
 bus.add_signal_receiver(screensaver_handler, dbus_interface='org.gnome.ScreenSaver', signal_name='ActiveChanged')
-
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 loop = gobject.MainLoop()
+sys.excepthook = on_error
 loop.run()

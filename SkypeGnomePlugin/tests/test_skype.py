@@ -34,11 +34,11 @@ def safe_switch_skype_status(statFrom, statTo):
       if forceAttach:
         log('Try attach.')
         skype.Attach()
+        forceAttach = False
       # Note: CurrentUserStatus and ChangeUserStatus call synchron attach if need; may throw exception
       if skype.CurrentUserStatus == statFrom:
         skype.ChangeUserStatus(statTo)
         statusMatch = True
-        forceAttach = False
         log('Set status from ' + statFrom + ' to ' + statTo + '.')
       else:
         statusMatch = False
