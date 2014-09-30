@@ -3,6 +3,7 @@
 import sys
 import exceptions
 try:
+  import logging
   import Skype4Py
   import dbus
   import dbus.glib
@@ -11,6 +12,7 @@ try:
   from time import sleep
   from threading import Thread
   from threading import RLock
+  from os.path import expanduser
 except exceptions.ImportError, e:
   print >>sys.stderr, 'Missing modules:'
   print >>sys.stderr, e
@@ -18,8 +20,9 @@ except exceptions.ImportError, e:
 
 class SkypeGnomePlugin:
 
-  def __init__(self, pluginName):
-    self.logging = True
+  def __init__(self, pluginName, logFilename):
+    self.logging = logFilename != ''
+    self.__init_logger(pluginName, logFilename)
     self.__statusMatch = False
     self.__forceAttach = False
     self.__lock = RLock()
@@ -41,6 +44,13 @@ class SkypeGnomePlugin:
     thread = Thread(target = self.__switch_skype_status, args = (statFrom, statTo))
     thread.start()
     return thread
+
+  def __init_logger(self, pluginName, logFilename):
+    if self.logging:
+      if logFilename.startswith('~/'):
+        logFilename = expanduser("~") + logFilename[1:]
+      logging.basicConfig(filename=logFilename, level=logging.DEBUG)
+    self.__logger = logging.getLogger(pluginName)
 
   def __init_error_handler(self):
     sys.excepthook = self.__on_error
@@ -112,7 +122,8 @@ class SkypeGnomePlugin:
 
   def __log(self, text):
     if self.logging:
+      self.__logger.info(text)
       print text
 
 if __name__ == '__main__':
-  SkypeGnomePlugin('SkypeGnomePlugin').start()
+  SkypeGnomePlugin('SkypeGnomePlugin', '~/skype-gnome-plugin.log').start()
